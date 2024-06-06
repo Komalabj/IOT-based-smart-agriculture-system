@@ -1,0 +1,91 @@
+//Libraries
+#include <DHT.h>
+#include "ThingSpeak.h"
+    #include <SPI.h>
+    #include <Ethernet.h>
+   byte mac[] = { 0xFF, 0x3C, 0xDA, 0xB7, 0xC1, 0x05};
+
+#define DHTPIN 7   // what pin we're connected to
+#define DHTTYPE DHT11  // DHT 11  (AM2302)
+// Initialize DHT sensor for normal 16mhz Arduino
+ // DHT.begin();
+   char thingSpeakAddress[] = "api.thingspeak.com";
+String writeAPIKey = "Z26VU0QK2FOAULV3";
+const int updateThingSpeakInterval = 16 * 1000;     
+DHT dht(DHTPIN, DHTTYPE);
+const int sensor_pin = A0;
+const int LDRpin = 1;
+int LDRvalue = 0;
+const int Fan=5;
+const int Motor=6;
+//Variables
+int chk;
+float hum;  //Stores humidity value
+float temp; //Stores temperature value
+unsigned long myChannelNumber = 2522552;    //not importatnt for you
+const char * myWriteAPIKey = "Z26VU0QK2FOAULV3";                     //not importatnt for you
+EthernetClient client;
+void setup()
+{
+    Serial.begin(9600);
+    pinMode(LDRpin,INPUT);
+    pinMode(Fan,OUTPUT);
+    pinMode(Motor,OUTPUT);
+}
+
+void loop()
+{
+    LDRvalue = digitalRead(LDRpin);
+  Serial.println(LDRvalue);
+  int Soil_Moist;
+  Soil_Moist = analogRead(sensor_pin);
+  Serial.print("Soil Moisture=");
+  Serial.println(Soil_Moist);
+    //Read data and store it to variables hum and temp
+    hum = dht.readHumidity();
+    temp= dht.readTemperature();
+    //Print temp and humidity values to serial monitor
+    Serial.print("Humidity: ");
+    Serial.print(hum);
+    Serial.print(" %, Temp: ");
+    Serial.print(temp);
+    Serial.println(" Celsius");
+   
+     if(LDRvalue==1)
+     {
+      Serial.println("animals detected");
+     }
+     else
+     {
+     Serial.println("no animals");
+     }
+    if(Soil_Moist>300)
+  {
+    digitalWrite(Motor,LOW);
+    Serial.println("motor on");
+  }
+  else
+  {
+    digitalWrite(Motor,HIGH);
+        Serial.println("motor on");
+
+  }
+  if(temp>26)
+  {
+
+    digitalWrite(Fan,LOW);
+      delay(100);
+
+    Serial.println("Fan on");
+  }
+  else
+  {
+      digitalWrite(Fan,HIGH);
+      delay(100);
+      Serial.println("Fan off");
+  }
+ ThingSpeak.writeField(myChannelNumber, 1, temp, myWriteAPIKey);
+  ThingSpeak.writeField(myChannelNumber, 2, hum, myWriteAPIKey);
+  ThingSpeak.writeField(myChannelNumber, 3, LDRvalue, myWriteAPIKey);
+  //delay(10000);  
+}
